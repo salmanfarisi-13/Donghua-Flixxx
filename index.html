@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Donghua Recommender Pro</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b0f19;
+  color: white;
+}
+
+header {
+  background: #111827;
+  padding: 15px;
+  text-align: center;
+  font-size: 26px;
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+.filter {
+  text-align: center;
+  margin: 20px;
+}
+
+button {
+  padding: 8px 15px;
+  margin: 5px;
+  border: none;
+  border-radius: 20px;
+  background: #38bdf8;
+  cursor: pointer;
+}
+
+.container {
+  padding: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 30px;
+}
+
+.card {
+  background: #111827;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+
+.card:hover {
+  transform: scale(1.07);
+}
+
+.card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.info {
+  padding: 10px;
+  text-align: center;
+}
+
+.genre {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 99;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+}
+
+.modal-content {
+  background: #111827;
+  margin: 5% auto;
+  padding: 20px;
+  width: 80%;
+  border-radius: 20px;
+}
+
+.modal-content {
+  background: #111;
+  margin: 3% auto;
+  padding: 20px;
+  width: 70%;        /* lebih kecil dari sebelumnya */
+  max-width: 900px;  /* biar nggak terlalu lebar */
+  border-radius: 15px;
+}
+.close {
+  float: right;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+video {
+  width: 100%;
+  max-height: 400px;   /* batasi tinggi */
+  object-fit: cover;   /* biar rapi */
+  border-radius: 10px;
+}
+iframe {
+  width: 100%;
+  height: 400px;
+  border-radius: 10px;
+} 
+</style>
+</head>
+
+<body>
+
+<header>🎬 Donghua Flix</header>
+
+<div class="filter">
+  <input type="text" id="search" placeholder="Cari donghua..."
+         onkeyup="searchMovie()" 
+         style="padding:10px; width:200px; border-radius:20px; border:none;">
+
+  <br><br>
+
+<div class="filter">
+  <button onclick="filterGenre('All')">Semua</button>
+  <button onclick="filterGenre('Action')">Action</button>
+  <button onclick="filterGenre('Romance')">Romance</button>
+  <button onclick="filterGenre('Fantasy')">Fantasy</button>
+</div>
+
+<div class="container">
+  <div class="grid" id="movies"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2 id="title"></h2>
+    <p id="genre"></p>
+    <p id="desc"></p>
+    <p id="rating"></p>
+    <iframe id="trailer" frameborder="0" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+const movies = [
+  {
+    title: "Ne Zha",
+    genre: ["Action", "Fantasy"],
+    image: "ne zha.jpg",
+    desc: "Sosok dewa anak-anak yang ditakdirkan menjadi iblis, namun berjuang melawan takdirnya sendiri.",
+    rating: "⭐ 8.5",
+    trailer: "Ne_Zha.mp4"
+  },
+  {
+    title: "Battle Through The Heavens",
+    genre: ["Action", "Fantasy"],
+    image: "battle through the heavens.jpg",
+    desc: "Kisah balas dendam dan pertumbuhan Xiao Yan, yang bertekad memulihkan kehormatan keluarganya setelah dipermalukan dan tunangannya membatalkan pernikahan.",
+    rating: "⭐ 8.7",
+    trailer: "Battle Through The Heavens.mp4"
+  },
+  {
+    title: "Renegade Immortal",
+    genre: ["Action", "Romance"],
+    image: "Renegade Immortal.jpg",
+    desc: "Kultivasi (xianxia) tentang Wang Lin, pemuda biasa bertekad kuat yang memasuki dunia kultivasi meski bakatnya biasa-biasa saja. Setelah tragedi keluarga, ia berubah menjadi kultivator dingin, licik, dan tangguh yang berjuang melawan takdir (renegade) di dunia kultivasi yang kejam.",
+    rating: "⭐ 8.9",
+    trailer: "Renegade Immortal.mp4"
+  },
+  {
+      title: "Jiang Ziya",
+      genre: ["Action", "Fantasy"],
+      image: "jiang ziya.jpg",
+      desc: "Mengisahkan komandan suci Jiang Ziya yang diasingkan ke dunia fana karena menolak membunuh siluman rubah yang terikat dengan jiwa seorang gadis tak berdosa. Ia harus melawan kehendak langit, menemukan kebenaran, dan menyelamatkan manusia.",
+      rating: "⭐ 8.9",
+      trailer: "JIANG Ziya.mp4"
+    },
+    {
+      title: "White Snake",
+      genre: ["Romance", "Fantasy"],
+      image: "white snake.jpg",
+      desc: "Blanca, siluman ular putih yang hilang ingatan, yang jatuh cinta pada seorang pemburu ular bernama Xuan, di tengah konflik sihir dan perbedaan alam mereka.",
+      rating: "⭐ 8.9",
+      trailer: "White Snake.mp4"
+    },
+    {
+      title: "Martial Universe",
+      genre: ["Fantasy", "Romance"],
+      image: "martial universe.jpg",
+      desc: "Lin Dong, pemuda berbakat dari keluarga terpinggirkan yang menemukan jimat batu misterius di dalam gua. Dengan bantuan jimat tersebut dan tekad kuat, ia berlatih seni bela diri, melampaui batas kultivasi, serta bertarung melawan musuh kuat demi balas dendam klan dan melindungi dunia dari sekte iblis. .",
+      rating: "⭐ 8.9",
+      trailer: "Martial Universe.mp4"
+    },
+    {
+      title: "Azure Legazy",
+      genre: ["Action", "Romance"],
+      image: "azure legazy.jpg",
+      desc: "Perjalanan balas dendam Meng Chuan, pendekar muda yang melatih tombak dan teknik spiritual untuk memburu iblis yang membunuh ibunya dan mengancam dunia Cangyuan.",
+      rating: "⭐ 8.9",
+      trailer: "The Demon Hunter2.mp4"
+    },
+    {
+      title: "To Be Hero X",
+      genre: ["Action", "Romance"],
+      image: "To Be Hero X.jpg",
+      desc: "Kekuatan pahlawan super bertambah/berkurang sesuai dengan seberapa banyak masyarakat mempercayai mereka, diukur melalui data, yang bisa dilihat di pergelangan tangan.",
+      rating: "⭐ 8.9",
+      trailer: "To Be Hero X.mp4"
+    },
+    {
+      title: "Stellar Transformation",
+      genre: ["Action", "Romance"],
+      image: "Stellar Transformation.jpg",
+      desc: "Tentang Qin Yu, seorang pangeran yang terlahir tanpa bakat kultivasi internal. Ia menempuh jalur kultivasi eksternal yang keras, menemukan Air Mata Meteorit yang mengubah takdirnya, dan mendaki dari dunia fana ke alam ilahi demi kekuatan.",
+      rating: "⭐ 8.9",
+      trailer:"Stellar Transformations.mp4"
+    },
+
+    {
+      title: "World Of Immortals",
+      genre: ["Action", "Fantasy"],
+      image: "world of immortals.jpg",
+      desc: " Xiao Chen, manusia fana yang terdampar di Pulau Naga, Alam Abadi, akibat pengejaran Putri Zhao Lin'er. Ia harus berjuang di dunia mitologi kuno yang penuh bahaya, bertarung, dan mengungkap misteri keabadian.",
+      rating: "⭐ 8.9",
+      trailer:"world of importals.mp4"
+    },
+    {
+      title: "Tales Of Herding God",
+      genre: ["Action", "Fantasy"],
+      image: "tales of herding god.jpg",
+      desc: "perjalanan Qin Mu, pemuda yang dibesarkan oleh sembilan lansia misterius berkemampuan khusus di Desa Can Lao (Desa Penyandang Disabilitas) di wilayah berbahaya Daxu.",
+      rating: "⭐ 8.9",
+      trailer: "tales Of herding god.mp4"
+    },
+    {
+      title: "Jade Dynasty",
+      genre: ["Action", "Fantasy"],
+      image: "jade dynasty.jpg",
+      desc: "Zhang Xiaofan, yatim piatu yang bergabung dengan Sekte Qingyun setelah desanya dibantai. Ia berjuang menguasai bela diri mistis, terjebak konflik antara sekte kebenaran dan iblis, serta kisah cinta rumit.",
+      rating: "⭐ 8.9",
+      trailer: "Jade Dynasty.mp4"
+    },
+    {
+      title: "Slay The God",
+      genre: ["Action", "Fantasy"],
+      image: "slay the god.jpg",
+      desc: "Lin Qiye, siswa SMA yang tiba-tiba buta namun membangkitkan kekuatan dewa. Ia bergabung dengan tim khusus Night Guardians untuk membasmi makhluk mitologis yang mengancam dunia, berkembang dari pelindung keluarga menjadi pembunuh dewa terkuat.",
+      rating: "⭐ 8.9",
+      trailer: "Slay The Gods.mp4"
+    },
+     {
+      title: "Beyond Of Time",
+      genre: ["Action", "Fantasy"],
+      image: "beyond of time.jpg",
+      desc: "Berkisah tentang Xu Qing, seorang remaja yang berjuang bertahan hidup di dunia brutal yang tercemar aura dewa. Dengan latar dunia yang kacau dan bermutasi, ia menempuh jalan kultivasi keras untuk menemukan keluarganya.",
+      rating: "⭐ 8.9",
+      trailer: "Beyond Time's Gaze.mp4"
+    },
+];
+
+function searchMovie() {
+  const keyword = document.getElementById("search").value.toLowerCase();
+
+  const filtered = movies.filter(movie =>
+    movie.title.toLowerCase().includes(keyword)
+  );
+
+  displayMovies(filtered);
+} 
+
+function displayMovies(list) {
+  const container = document.getElementById("movies");
+  container.innerHTML = "";
+
+  list.forEach(movie => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.onclick = () => openModal(movie);
+
+    div.innerHTML = `
+      <img src="${movie.image}">
+      <div class="info">
+        <h4>${movie.title}</h4>
+        <div class="genre">${movie.genre.join(", ")}</div>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function filterGenre(genre) {
+  if (genre === "All") {
+    displayMovies(movies);
+  } else {
+    const filtered = movies.filter(m => m.genre.includes(genre));
+    displayMovies(filtered);
+  }
+}
+
+function openModal(movie) {
+  document.getElementById("modal").style.display = "block";
+  document.getElementById("title").innerText = movie.title;
+  document.getElementById("genre").innerText = movie.genre.join(", ");
+  document.getElementById("desc").innerText = movie.desc;
+  document.getElementById("rating").innerText = movie.rating;
+
+  const video = document.getElementById("trailer");
+  video.src = movie.trailer;
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  document.getElementById("trailer").pause();
+}
+
+// Load awal
+displayMovies(movies);
+</script>
+
+</body>
+</html>
